@@ -1,10 +1,10 @@
-# 🏃 Optimisation des Performances Sportives
+# 📉 Optimisation des Performances Sportives
 
 > Analyse de données biométriques par Machine Learning pour optimiser les performances des athlètes et fournir des recommandations personnalisées.
 
 ---
 
-## 📋 Description du projet
+## ![Description](https://img.shields.io/badge/Description-Projet-blue?style=flat-square&logo=googledocs&logoColor=white) Description du projet
 
 Ce projet analyse les données biométriques collectées lors de séances sportives (fréquence cardiaque, accélération, fréquence de pas, gyroscope, etc.) afin de :
 
@@ -15,7 +15,7 @@ Ce projet analyse les données biométriques collectées lors de séances sporti
 
 ---
 
-## 🗂️ Structure du projet
+## ![Structure](https://img.shields.io/badge/Structure-Dossiers-orange?style=flat-square&logo=gitbook&logoColor=white) Structure du projet
 
 ```
 project_python/
@@ -38,7 +38,7 @@ project_python/
 
 ---
 
-## 🏗️ Architecture du Système
+## ![Architecture](https://img.shields.io/badge/Architecture-Système-6C63FF?style=flat-square&logo=diagrams.net&logoColor=white) Architecture du Système
 
 ```mermaid
 flowchart TD
@@ -86,7 +86,7 @@ flowchart TD
 
 ---
 
-## ⚙️ Pipeline de traitement
+## ![Pipeline](https://img.shields.io/badge/Pipeline-Traitement-success?style=flat-square&logo=githubactions&logoColor=white) Pipeline de traitement
 
 ### Tâche 1 — Collecte et nettoyage des données (`moncf.py`)
 
@@ -156,7 +156,7 @@ Les recommandations s'adaptent automatiquement au niveau détecté :
 
 ---
 
-## 🚀 Installation et utilisation
+## ![Utilisation](https://img.shields.io/badge/Installation-Utilisation-success?style=flat-square&logo=rocket&logoColor=white) Installation et utilisation
 
 ### 1. Installer les dépendances
 
@@ -191,19 +191,19 @@ python analyser_les_performances/app_gui.py
 
 ---
 
-## 🧰 Technologies utilisées
+## ![Technologies](https://img.shields.io/badge/Technologies-Outils-informational?style=flat-square&logo=stackshare&logoColor=white) Technologies utilisées
 
 | Outil | Rôle |
 |-------|------|
-| **Python 3.x** | Langage principal |
-| **pandas / numpy** | Manipulation et nettoyage des données |
-| **scikit-learn** | Modèles ML (RandomForestRegressor, RandomForestClassifier) |
-| **joblib** | Sauvegarde / chargement des modèles |
-| **tkinter** | Interface graphique de bureau |
+| ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | Langage principal |
+| ![Pandas](https://img.shields.io/badge/Pandas-150458?style=flat-square&logo=pandas&logoColor=white) / ![NumPy](https://img.shields.io/badge/NumPy-013243?style=flat-square&logo=numpy&logoColor=white) | Manipulation et nettoyage des données |
+| ![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-F7931E?style=flat-square&logo=scikit-learn&logoColor=white) | Modèles ML (RandomForestRegressor, RandomForestClassifier) |
+| ![Joblib](https://img.shields.io/badge/Joblib-grey?style=flat-square) | Sauvegarde / chargement des modèles |
+| ![Tkinter](https://img.shields.io/badge/Tkinter-blue?style=flat-square) | Interface graphique de bureau |
 
 ---
 
-## 📊 À propos du dataset
+## ![Dataset](https://img.shields.io/badge/Dataset-Donn%C3%A9es-lightgrey?style=flat-square&logo=database&logoColor=white) À propos du dataset
 
 `athletes_full_recommendations.csv` contient des enregistrements biométriques pour trois épreuves :
 
@@ -217,7 +217,7 @@ Chaque enregistrement inclut un score de performance, un niveau de risque de ble
 
 ---
 
-## 👥 Équipe
+## ![Équipe](https://img.shields.io/badge/%C3%89quipe-Membres-important?style=flat-square&logo=microsoftteams&logoColor=white) Équipe
 
 - **Brahim EL BAHLOUL**
 - **Yassine Mokrame**
