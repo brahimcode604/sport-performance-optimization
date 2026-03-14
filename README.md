@@ -169,6 +169,14 @@ Chaque enregistrement inclut un score de performance, un niveau de risque de ble
 
 ---
 
-## 👤 Auteur
+## 👥 Équipe
+
+- **Brahim EL BAHLOUL**
+- **Yassine Mokrame**
+- **Mounssif Saih**
+- **Jaouad Nainiaa**
+- **Bargaa Issa**
+
+---
 
 Projet réalisé dans le cadre d'un cours sur l'optimisation des performances sportives par intelligence artificielle.
