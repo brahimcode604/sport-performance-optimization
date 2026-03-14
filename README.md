@@ -38,6 +38,54 @@ project_python/
 
 ---
 
+## 🏗️ Architecture du Système
+
+```mermaid
+flowchart TD
+    subgraph Data_Layer [Couche Données]
+        RawData["athletes_full_recommendations.csv<br/>(Données Brutes)"]
+        CleanData["data_nettoyer.csv<br/>(Données Nettoyées & Standardisées)"]
+    end
+
+    subgraph Processing_Layer [Couche Traitement]
+        Cleaning["moncf.py<br/>(Nettoyage, IQR, Z-Score, Encodage)"]
+    end
+
+    subgraph Model_Layer [Couche IA / Modèles]
+        Training["train_model.py<br/>(Random Forest Trainer)"]
+        PerfModel["perf_model.pkl<br/>(Régression Score)"]
+        RecoModel["reco_model.pkl<br/>(Classification Niveau)"]
+    end
+
+    subgraph Application_Layer [Couche Application]
+        GUI["app_gui.py<br/>(Interface Tkinter Premium)"]
+        CLI["predict.py<br/>(Test en console)"]
+        Outputs["Résultats :<br/>- Score 0-100<br/>- Niveau (🏆/✔️/❌)<br/>- Recommandations"]
+    end
+
+    RawData --> Cleaning
+    Cleaning --> CleanData
+    CleanData --> Training
+    Training --> PerfModel
+    Training --> RecoModel
+    
+    PerfModel --> GUI
+    RecoModel --> GUI
+    PerfModel --> CLI
+    RecoModel --> CLI
+    
+    GUI --> Outputs
+    CLI --> Outputs
+
+    style RawData fill:#f9f,stroke:#333,stroke-width:2px
+    style CleanData fill:#f9f,stroke:#333,stroke-width:2px
+    style PerfModel fill:#6C63FF,stroke:#fff,stroke-width:2px,color:#fff
+    style RecoModel fill:#6C63FF,stroke:#fff,stroke-width:2px,color:#fff
+    style GUI fill:#0078D7,stroke:#fff,stroke-width:2px,color:#fff
+```
+
+---
+
 ## ⚙️ Pipeline de traitement
 
 ### Tâche 1 — Collecte et nettoyage des données (`moncf.py`)
