@@ -2,68 +2,117 @@ import pandas as pd
 import os
 import joblib
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_absolute_error, r2_score
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.metrics import mean_absolute_error, r2_score, classification_report
 
-def train_performance_model(data_path, model_save_path):
-    print(" Démarrage de l'entraînement du modèle de Performance...")
-    
-    # 1. Chargement des données
-    print("-> 1. Chargement des données...")
-    try:
-        df = pd.read_csv(data_path)
-    except FileNotFoundError:
-        print(f"Erreur : Le fichier {data_path} est introuvable.")
-        return
+# ─────────────────────────────────────────────
+#  Features communes aux deux modèles
+# ─────────────────────────────────────────────
+FEATURES = [
+    'heart_rate_bpm', 'step_frequency_hz', 'stride_length_m',
+    'acceleration_mps2', 'gyroscope_x', 'gyroscope_y', 'gyroscope_z',
+    'accelerometer_x', 'accelerometer_y', 'accelerometer_z',
+    'signal_energy', 'dominant_freq_hz',
+    'event_type_high_jump', 'event_type_long_jump', 'event_type_sprint',
+    'motion_class_acceleration_phase', 'motion_class_flight_phase',
+    'motion_class_landing', 'motion_class_start_phase',
+    'risk_level_encoded', 'hr_zone_encoded'
+]
 
-    # 2. Définition des Features (X) et de la Target (y)
-    print("-> 2. Préparation des variables...")
-    # On sélectionne les colonnes qui influencent la performance
-    features = [
-        'age', 'weight', 'resting_hr', 'avg_hr', 'max_hr', 'hrv', 
-        'vo2max', 'speed_avg', 'distance_km', 'duration_min', 
-        'training_load', 'sleep_hours', 'fatigue_score'
-    ]
-    
-    X = df[features]
-    y = df['performance_score'] # Ce qu'on veut prédire
+# ─────────────────────────────────────────────
+#  Modèle 1 : Prédiction du score de performance
+# ─────────────────────────────────────────────
+def train_performance_model(df, model_save_path):
+    print("\n🎯 [Modèle 1] Entraînement : Score de Performance")
 
-    # 3. Séparation en données d'entraînement (80%) et de test (20%)
-    print("-> 3. Séparation des données (Train/Test Split)...")
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X = df[FEATURES]
+    y = df['performance_score']
 
-    # 4. Initialisation et entraînement du modèle
-    print("-> 4. Entraînement de l'algorithme (Random Forest)...")
-    # n_estimators=100 signifie que l'on crée "100 arbres de décision" pour avoir un résultat robuste
-    model = RandomForestRegressor(n_estimators=100, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.20, random_state=42
+    )
+
+    model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
     model.fit(X_train, y_train)
 
-    # 5. Évaluation des performances du modèle
-    print("-> 5. Évaluation de la précision...")
     predictions = model.predict(X_test)
-    
     mae = mean_absolute_error(y_test, predictions)
-    r2 = r2_score(y_test, predictions)
-    
-    print("\n📊 --- RÉSULTATS DU MODÈLE ---")
-    print(f"Erreur Absolue Moyenne (MAE) : {mae:.2f} points")
-    print(f"Score R2 (Explication de la variance) : {r2:.2f} (plus c'est proche de 1.0, mieux c'est)")
-    print("------------------------------\n")
+    r2  = r2_score(y_test, predictions)
 
-    # 6. Sauvegarde du modèle pour une utilisation future
-    print("-> 6. Sauvegarde du modèle...")
-    # Création du dossier 'models' s'il n'existe pas déjà
-    os.makedirs(os.path.dirname(model_save_path), exist_ok=True)
-    
-    # joblib permet de sauvegarder l'objet Python (le modèle) dans un fichier physique
+    print(f"   MAE  : {mae:.4f} (erreur moyenne absolue des scores)")
+    print(f"   R²   : {r2:.4f}  (plus proche de 1 = meilleur)")
+
     joblib.dump(model, model_save_path)
-    print(f" Modèle sauvegardé avec succès sous : {model_save_path}")
+    print(f"   ✅  Modèle sauvegardé → {model_save_path}")
+    return model
 
+
+# ─────────────────────────────────────────────
+#  Modèle 2 : Classification du niveau de performance
+# ─────────────────────────────────────────────
+def train_recommendation_model(df, model_save_path):
+    print("\n🏋️  [Modèle 2] Entraînement : Niveau de Performance (classification)")
+
+    X = df[FEATURES]
+    y = df['performance_level_encoded']   # 0=Insuffisante, 1=Bonne, 2=Excellente
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.20, random_state=42
+    )
+
+    model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
+    model.fit(X_train, y_train)
+
+    predictions = model.predict(X_test)
+    print(classification_report(
+        y_test, predictions,
+        target_names=['Insuffisante', 'Bonne', 'Excellente'],
+        zero_division=0
+    ))
+
+    joblib.dump(model, model_save_path)
+    print(f"   ✅  Modèle sauvegardé → {model_save_path}")
+    return model
+
+
+# ─────────────────────────────────────────────
+#  Point d'entrée principal
+# ─────────────────────────────────────────────
 if __name__ == "__main__":
-    # Définition des chemins relatifs (basés sur l'arborescence de notre projet)
-    # Assurez-vous d'avoir votre fichier CSV à cet emplacement !
-    CHEMIN_DONNEES = "../sport_performance_dataset_2000.csv" 
-    CHEMIN_MODELE = "./perf_model_v1.pkl"
-    
-    # Lancement de la fonction principale
-    train_performance_model(CHEMIN_DONNEES, CHEMIN_MODELE)
+    DATA_PATH  = "../data_nettoyer.csv"
+    PERF_MODEL = "./perf_model.pkl"
+    RECO_MODEL = "./reco_model.pkl"
+
+    print("=" * 55)
+    print(" OPTIMISATION DES PERFORMANCES SPORTIVES - ENTRAÎNEMENT")
+    print("=" * 55)
+
+    # ── Chargement
+    print(f"\n📂 Chargement : {DATA_PATH}")
+    try:
+        df = pd.read_csv(DATA_PATH)
+    except FileNotFoundError:
+        print(f"❌ Erreur : fichier introuvable → {DATA_PATH}")
+        exit(1)
+
+    print(f"   {len(df):,} lignes · {df.shape[1]} colonnes chargées.")
+
+    # ── Vérification des colonnes requises
+    missing = [c for c in FEATURES + ['performance_score', 'performance_level_encoded']
+               if c not in df.columns]
+    if missing:
+        print(f"❌ Colonnes manquantes : {missing}")
+        exit(1)
+
+    # ── Suppression des NaN éventuels
+    df.dropna(subset=FEATURES + ['performance_score', 'performance_level_encoded'], inplace=True)
+    print(f"   {len(df):,} lignes après suppression des NaN.")
+
+    # ── Entraînements
+    os.makedirs(os.path.dirname(PERF_MODEL) if os.path.dirname(PERF_MODEL) else ".", exist_ok=True)
+    train_performance_model(df, PERF_MODEL)
+    train_recommendation_model(df, RECO_MODEL)
+
+    print("\n" + "=" * 55)
+    print(" 🏁 Entraînement terminé avec succès !")
+    print("=" * 55)
