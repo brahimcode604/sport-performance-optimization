@@ -1,89 +1,352 @@
+"""
+app_gui.py — Interface graphique : Optimisation des Performances Sportives
+Utilise les modèles perf_model.pkl (régression) et reco_model.pkl (classification).
+"""
+
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import ttk, messagebox
 import pandas as pd
 import joblib
+import os
 
-def predire_performance():
-    """Fonction déclenchée lors du clic sur le bouton Prédire"""
-    try:
-        # 1. Récupération des données saisies dans l'interface
-        donnees_athlete = {
-            'age': float(entrees['age'].get()),
-            'weight': float(entrees['weight'].get()),
-            'resting_hr': float(entrees['resting_hr'].get()),
-            'avg_hr': float(entrees['avg_hr'].get()),
-            'max_hr': float(entrees['max_hr'].get()),
-            'hrv': float(entrees['hrv'].get()),
-            'vo2max': float(entrees['vo2max'].get()),
-            'speed_avg': float(entrees['speed_avg'].get()),
-            'distance_km': float(entrees['distance_km'].get()),
-            'duration_min': float(entrees['duration_min'].get()),
-            'training_load': float(entrees['training_load'].get()),
-            'sleep_hours': float(entrees['sleep_hours'].get()),
-            'fatigue_score': float(entrees['fatigue_score'].get())
-        }
+# ─────────────────────────────────────────────
+#  Configuration
+# ─────────────────────────────────────────────
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PERF_MODEL_PATH = os.path.join(SCRIPT_DIR, "perf_model.pkl")
+RECO_MODEL_PATH = os.path.join(SCRIPT_DIR, "reco_model.pkl")
 
-        # 2. Chargement du modèle
-        chemin_modele = "./perf_model_v1.pkl"
-        modele = joblib.load(chemin_modele)
+FEATURES = [
+    'heart_rate_bpm', 'step_frequency_hz', 'stride_length_m',
+    'acceleration_mps2', 'gyroscope_x', 'gyroscope_y', 'gyroscope_z',
+    'accelerometer_x', 'accelerometer_y', 'accelerometer_z',
+    'signal_energy', 'dominant_freq_hz',
+    'event_type_high_jump', 'event_type_long_jump', 'event_type_sprint',
+    'motion_class_acceleration_phase', 'motion_class_flight_phase',
+    'motion_class_landing', 'motion_class_start_phase',
+    'risk_level_encoded', 'hr_zone_encoded'
+]
 
-        # 3. Prédiction
-        df_nouvelle_seance = pd.DataFrame([donnees_athlete])
-        prediction = modele.predict(df_nouvelle_seance)[0]
+LABELS_PERF = {0: "Insuffisante", 1: "Bonne", 2: "Excellente"}
+LABELS_PERF_COLOR = {0: "#E74C3C", 1: "#F39C12", 2: "#2ECC71"}
+LABELS_PERF_EMOJI = {0: "❌", 1: "✔️", 2: "🏆"}
 
-        # 4. Affichage du résultat dans l'interface
-        label_resultat.config(text=f"Score de Performance Estimé :\n⭐ {prediction:.1f} / 100 ⭐", fg="green")
-
-    except FileNotFoundError:
-        messagebox.showerror("Erreur", "Le fichier 'perf_model_v1.pkl' est introuvable. Placez-le dans le même dossier.")
-    except ValueError:
-        messagebox.showerror("Erreur de saisie", "Veuillez vérifier que toutes les cases contiennent des nombres valides.")
-    except Exception as e:
-        messagebox.showerror("Erreur", f"Une erreur inattendue est survenue : {e}")
-
-
-# --- CRÉATION DE LA FENÊTRE PRINCIPALE ---
-fenetre = tk.Tk()
-fenetre.title("IA Sports Tech - Optimisation des Performances")
-fenetre.geometry("400x650")
-fenetre.configure(padx=20, pady=20)
-
-titre = tk.Label(fenetre, text="Paramètres de la Séance", font=("Helvetica", 14, "bold"))
-titre.grid(row=0, column=0, columnspan=2, pady=(0, 15))
-
-# Les valeurs par défaut que vous avez fournies
-valeurs_par_defaut = {
-    'age': 28, 'weight': 72.5, 'resting_hr': 55.0, 'avg_hr': 155.0,
-    'max_hr': 175.0, 'hrv': 65.0, 'vo2max': 50.0, 'speed_avg': 12.5,
-    'distance_km': 10.0, 'duration_min': 48.0, 'training_load': 75.0,
-    'sleep_hours': 8.0, 'fatigue_score': 0.5
+# Valeurs par défaut (normalisées, basées sur data_nettoyer.csv)
+DEFAULTS = {
+    'heart_rate_bpm'                  : '0.63',
+    'step_frequency_hz'               : '-0.88',
+    'stride_length_m'                 : '1.66',
+    'acceleration_mps2'               : '-0.30',
+    'gyroscope_x'                     : '-0.55',
+    'gyroscope_y'                     : '0.25',
+    'gyroscope_z'                     : '-0.07',
+    'accelerometer_x'                 : '-1.63',
+    'accelerometer_y'                 : '-1.30',
+    'accelerometer_z'                 : '0.23',
+    'signal_energy'                   : '1.06',
+    'dominant_freq_hz'                : '1.05',
+    'event_type_high_jump'            : '1',
+    'event_type_long_jump'            : '0',
+    'event_type_sprint'               : '0',
+    'motion_class_acceleration_phase' : '0',
+    'motion_class_flight_phase'       : '1',
+    'motion_class_landing'            : '0',
+    'motion_class_start_phase'        : '0',
+    'risk_level_encoded'              : '2',
+    'hr_zone_encoded'                 : '2',
 }
 
+LABELS_FR = {
+    'heart_rate_bpm'                  : 'Fréquence cardiaque (std)',
+    'step_frequency_hz'               : 'Fréquence de pas (std)',
+    'stride_length_m'                 : 'Longueur de foulée (std)',
+    'acceleration_mps2'               : 'Accélération (std)',
+    'gyroscope_x'                     : 'Gyroscope X (std)',
+    'gyroscope_y'                     : 'Gyroscope Y (std)',
+    'gyroscope_z'                     : 'Gyroscope Z (std)',
+    'accelerometer_x'                 : 'Accéléromètre X (std)',
+    'accelerometer_y'                 : 'Accéléromètre Y (std)',
+    'accelerometer_z'                 : 'Accéléromètre Z (std)',
+    'signal_energy'                   : 'Énergie du signal (std)',
+    'dominant_freq_hz'                : 'Fréquence dominante (std)',
+    'event_type_high_jump'            : 'Saut en hauteur (0/1)',
+    'event_type_long_jump'            : 'Saut en longueur (0/1)',
+    'event_type_sprint'               : 'Sprint (0/1)',
+    'motion_class_acceleration_phase' : 'Phase accélération (0/1)',
+    'motion_class_flight_phase'       : 'Phase vol (0/1)',
+    'motion_class_landing'            : 'Phase atterrissage (0/1)',
+    'motion_class_start_phase'        : 'Phase départ (0/1)',
+    'risk_level_encoded'              : 'Niveau risque (0-3)',
+    'hr_zone_encoded'                 : 'Zone cardiaque (0-3)',
+}
+
+# ─────────────────────────────────────────────
+#  Palette de couleurs
+# ─────────────────────────────────────────────
+BG_DARK    = "#1A1E2E"
+BG_CARD    = "#252A3D"
+BG_FIELD   = "#0F1220"
+ACCENT     = "#6C63FF"
+ACCENT_L   = "#8B83FF"
+TEXT_PRI   = "#FFFFFF"
+TEXT_SEC   = "#A0A8C0"
+BORDER     = "#343A52"
+BTN_HOV    = "#5A52E0"
+
+# ─────────────────────────────────────────────
+#  Logique de prédiction
+# ─────────────────────────────────────────────
+def predire():
+    """Lecture des champs → prédiction → affichage."""
+    try:
+        data = {feat: float(entrees[feat].get()) for feat in FEATURES}
+    except ValueError:
+        messagebox.showerror(
+            "Erreur de saisie",
+            "Tous les champs doivent contenir des valeurs numériques valides."
+        )
+        return
+
+    # Chargement des modèles
+    try:
+        perf_model = joblib.load(PERF_MODEL_PATH)
+        reco_model = joblib.load(RECO_MODEL_PATH)
+    except FileNotFoundError as e:
+        messagebox.showerror(
+            "Modèle manquant",
+            f"Fichier introuvable : {e}\n\n"
+            "Veuillez d'abord exécuter train_model.py pour générer les modèles."
+        )
+        return
+
+    df_in = pd.DataFrame([data])
+    score  = perf_model.predict(df_in)[0]
+    niveau = int(reco_model.predict(df_in)[0])
+
+    couleur = LABELS_PERF_COLOR.get(niveau, "#FFFFFF")
+    emojie  = LABELS_PERF_EMOJI.get(niveau, "")
+    label   = LABELS_PERF.get(niveau, "Inconnu")
+
+    # ── Mise à jour de la zone de résultat ──
+    lbl_score.config(
+        text=f"Score de Performance\n{score:.1f} / 100",
+        fg=couleur
+    )
+    lbl_niveau.config(
+        text=f"{emojie}  Niveau : {label}",
+        fg=couleur
+    )
+
+    # Barre de progression
+    progress_var.set(min(score, 100))
+
+    # Recommandation textuelle
+    if niveau == 0:
+        reco = (
+            "💡 Recommandations :\n"
+            "• Réduisez le volume d'entraînement de 20%.\n"
+            "• Concentrez-vous sur la technique et la récupération.\n"
+            "• Sommeil ≥ 8h, nutrition optimisée."
+        )
+    elif niveau == 1:
+        reco = (
+            "💡 Recommandations :\n"
+            "• Augmentez progressivement la charge (+5–10%/semaine).\n"
+            "• Cycle 3+1 : 3 semaines de charge, 1 semaine de récupération.\n"
+            "• Intégrez des exercices spécifiques à votre discipline."
+        )
+    else:
+        reco = (
+            "💡 Recommandations :\n"
+            "• Introduisez du cross-training et de la plyométrie.\n"
+            "• Surveillez les signaux de surentraînement (HRV).\n"
+            "• Variez les intensités pour éviter la stagnation."
+        )
+    lbl_reco.config(text=reco)
+
+
+def reset_fields():
+    """Réinitialise tous les champs aux valeurs par défaut."""
+    for feat, widget in entrees.items():
+        widget.delete(0, tk.END)
+        widget.insert(0, DEFAULTS[feat])
+    lbl_score.config(text="Score de Performance\n— / 100", fg=TEXT_SEC)
+    lbl_niveau.config(text="En attente de l'analyse…", fg=TEXT_SEC)
+    lbl_reco.config(text="")
+    progress_var.set(0)
+
+
+# ─────────────────────────────────────────────
+#  Construction de l'interface
+# ─────────────────────────────────────────────
+root = tk.Tk()
+root.title("IA Sports Tech — Optimisation des Performances")
+root.configure(bg=BG_DARK)
+root.resizable(False, False)
+
+# ── Style ttk ──
+style = ttk.Style()
+style.theme_use("clam")
+style.configure(
+    "bar.Horizontal.TProgressbar",
+    troughcolor=BG_FIELD,
+    background=ACCENT,
+    bordercolor=BG_FIELD,
+    lightcolor=ACCENT_L,
+    darkcolor=ACCENT
+)
+
+# ═══════════════════════════════════════════
+#  HEADER
+# ═══════════════════════════════════════════
+header = tk.Frame(root, bg=BG_DARK, pady=18)
+header.pack(fill="x", padx=20)
+
+tk.Label(
+    header,
+    text="⚡  IA Sports Tech",
+    font=("Helvetica", 22, "bold"),
+    bg=BG_DARK, fg=TEXT_PRI
+).pack(anchor="w")
+
+tk.Label(
+    header,
+    text="Optimisation des performances sportives par intelligence artificielle",
+    font=("Helvetica", 10),
+    bg=BG_DARK, fg=TEXT_SEC
+).pack(anchor="w")
+
+tk.Frame(root, bg=BORDER, height=1).pack(fill="x", padx=20)
+
+# ═══════════════════════════════════════════
+#  BODY : formulaire + résultats côte à côte
+# ═══════════════════════════════════════════
+body = tk.Frame(root, bg=BG_DARK)
+body.pack(fill="both", expand=True, padx=20, pady=12)
+
+# ── Panneau gauche : saisie des paramètres ──
+left = tk.Frame(body, bg=BG_CARD, bd=0, relief="flat",
+                highlightbackground=BORDER, highlightthickness=1)
+left.pack(side="left", fill="both", expand=True, padx=(0, 8))
+
+tk.Label(
+    left,
+    text="Paramètres Biométriques",
+    font=("Helvetica", 11, "bold"),
+    bg=BG_CARD, fg=ACCENT_L,
+    padx=14, pady=10
+).grid(row=0, column=0, columnspan=4, sticky="w")
+
 entrees = {}
-ligne = 1
+for idx, feat in enumerate(FEATURES):
+    col_base = (idx % 2) * 2       # 0 ou 2
+    row      = (idx // 2) + 1
 
-# Création automatique des étiquettes et des champs de saisie
-for variable, valeur in valeurs_par_defaut.items():
-    # Création du texte (Label)
-    label = tk.Label(fenetre, text=f"{variable} :", font=("Helvetica", 10))
-    label.grid(row=ligne, column=0, sticky="e", pady=5, padx=5)
-    
-    # Création de la zone de saisie (Entry)
-    champ = tk.Entry(fenetre, width=15, font=("Helvetica", 10))
-    champ.insert(0, str(valeur)) # On pré-remplit avec votre valeur
-    champ.grid(row=ligne, column=1, sticky="w", pady=5)
-    
-    # On stocke le champ pour pouvoir récupérer sa valeur plus tard
-    entrees[variable] = champ
-    ligne += 1
+    tk.Label(
+        left,
+        text=LABELS_FR[feat],
+        font=("Helvetica", 9),
+        bg=BG_CARD, fg=TEXT_SEC,
+        anchor="e", width=22
+    ).grid(row=row, column=col_base, sticky="e", padx=(10, 4), pady=3)
 
-# --- BOUTON DE PRÉDICTION ---
-bouton_predire = tk.Button(fenetre, text="Lancer l'IA (Prédire)", font=("Helvetica", 12, "bold"), bg="#0078D7", fg="white", command=predire_performance)
-bouton_predire.grid(row=ligne, column=0, columnspan=2, pady=20, ipadx=10, ipady=5)
+    e = tk.Entry(
+        left,
+        font=("Helvetica", 9),
+        bg=BG_FIELD, fg=TEXT_PRI,
+        insertbackground=TEXT_PRI,
+        relief="flat", bd=4,
+        width=10
+    )
+    e.insert(0, DEFAULTS[feat])
+    e.grid(row=row, column=col_base + 1, sticky="w", pady=3, padx=(0, 12))
+    entrees[feat] = e
 
-# --- ZONE DE RÉSULTAT ---
-label_resultat = tk.Label(fenetre, text="En attente des données...", font=("Helvetica", 14, "bold"), fg="gray")
-label_resultat.grid(row=ligne+1, column=0, columnspan=2, pady=10)
+# ── Panneau droit : résultats ──
+right = tk.Frame(body, bg=BG_CARD, bd=0, relief="flat",
+                 highlightbackground=BORDER, highlightthickness=1,
+                 width=260)
+right.pack(side="right", fill="y", padx=(8, 0))
+right.pack_propagate(False)
 
-# Lancement de l'application
-fenetre.mainloop()
+tk.Label(
+    right,
+    text="Résultats de l'IA",
+    font=("Helvetica", 11, "bold"),
+    bg=BG_CARD, fg=ACCENT_L,
+    padx=14, pady=10
+).pack(anchor="w")
+
+tk.Frame(right, bg=BORDER, height=1).pack(fill="x", padx=14)
+
+lbl_score = tk.Label(
+    right,
+    text="Score de Performance\n— / 100",
+    font=("Helvetica", 18, "bold"),
+    bg=BG_CARD, fg=TEXT_SEC,
+    pady=20
+)
+lbl_score.pack()
+
+# Barre de progression
+progress_var = tk.DoubleVar(value=0)
+ttk.Progressbar(
+    right,
+    variable=progress_var,
+    maximum=100,
+    style="bar.Horizontal.TProgressbar",
+    length=220
+).pack(padx=18, pady=(0, 14))
+
+lbl_niveau = tk.Label(
+    right,
+    text="En attente de l'analyse…",
+    font=("Helvetica", 12, "bold"),
+    bg=BG_CARD, fg=TEXT_SEC,
+    pady=6
+)
+lbl_niveau.pack()
+
+tk.Frame(right, bg=BORDER, height=1).pack(fill="x", padx=14, pady=8)
+
+lbl_reco = tk.Label(
+    right,
+    text="",
+    font=("Helvetica", 9),
+    bg=BG_CARD, fg=TEXT_SEC,
+    justify="left",
+    wraplength=220,
+    anchor="nw",
+    padx=14, pady=6
+)
+lbl_reco.pack(fill="both", expand=True)
+
+# ═══════════════════════════════════════════
+#  FOOTER : boutons
+# ═══════════════════════════════════════════
+tk.Frame(root, bg=BORDER, height=1).pack(fill="x", padx=20)
+
+footer = tk.Frame(root, bg=BG_DARK, pady=14)
+footer.pack()
+
+
+def make_button(parent, text, cmd, color=ACCENT, hov=BTN_HOV):
+    btn = tk.Button(
+        parent,
+        text=text,
+        command=cmd,
+        font=("Helvetica", 11, "bold"),
+        bg=color, fg=TEXT_PRI,
+        activebackground=hov, activeforeground=TEXT_PRI,
+        relief="flat", bd=0,
+        padx=22, pady=8,
+        cursor="hand2"
+    )
+    btn.pack(side="left", padx=8)
+    return btn
+
+
+make_button(footer, "🚀  Analyser", predire)
+make_button(footer, "↺  Réinitialiser", reset_fields, color="#343A52", hov="#454C6A")
+
+root.mainloop()
