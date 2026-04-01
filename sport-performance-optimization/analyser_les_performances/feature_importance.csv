@@ -1,0 +1,16 @@
+Feature,Abs Coef (avg)
+performance_level_Bonne,1.5472404812833191
+performance_score,1.2351413999830254
+hr_zone_Zone_Aerobie,1.1693467130572157
+risk_level_Modéré,1.1399280191486483
+hr_zone_Zone_Anaerobie,1.129130344428074
+event_type_sprint,1.0792316003425853
+event_type_high_jump,1.0769350049303266
+event_type_long_jump,1.0767703123356596
+risk_level_Élevé,1.0638600720962197
+heart_rate_bpm,0.8530957284769137
+injury_risk_score,0.8431348525377481
+risk_level_Critique,0.2690484036975628
+hr_zone_Zone_Max,0.11887771718266633
+risk_level_Faible,0.010151449624029139
+performance_level_Excellente,0.007564504454595984
