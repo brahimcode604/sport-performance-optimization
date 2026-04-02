@@ -1,0 +1,16 @@
+﻿Feature,Abs Coef (avg)
+hr_zone_encoded,0.6526187852412321
+risk_level_Élevé,0.5512345829879477
+risk_level_Modéré,0.5419856072398542
+hr_zone_Zone_Aerobie,0.5364402163486698
+hr_zone_Zone_Anaerobie,0.5363765551684118
+risk_level_encoded,0.4820630611340633
+event_type_sprint,0.3988453132519984
+event_type_high_jump,0.3980231340851168
+event_type_long_jump,0.39705941358203517
+injury_risk_score,0.1968263837957771
+heart_rate_bpm,0.021104753869874867
+step_frequency_hz,0.0
+accelerometer_x,0.0
+accelerometer_y,0.0
+accelerometer_z,0.0
